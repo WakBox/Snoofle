@@ -18,14 +18,27 @@ bool Snoofle::init()
 
     _authServer = new ProxyServer(
                 settings.value("AuthServer/listen").toUInt(),
-                settings.value("AuthServer/remote").toString());
+                settings.value("AuthServer/remote").toString(),
+                settings.value("RealmServer/listen").toUInt());
 
+    QString realm = settings.value("RealmServer/realm").toString();
     _realmServer = new ProxyServer(
                 settings.value("RealmServer/listen").toUInt(),
-                settings.value(settings.value("RealmServer/realm").toString() + "/ip").toString());
+                settings.value(realm + "/ip").toString());
 
     if (!_authServer->listen() || !_realmServer->listen())
         return false;
+
+    qDebug() << "[ Snoofle ]";
+    qDebug() << "Wakfu sniffer by Sgt Fatality";
+    qDebug() << " ";
+    qDebug() << ">> AuthServer listening on port " << _authServer->localPort();
+    qDebug() << ">> RealmServer listening on port " << _realmServer->localPort();
+    qDebug() << " ";
+    qDebug() << ">> RealmServer remote realm is " << realm;
+    qDebug() << " ";
+    qDebug() << ">> Waiting for client...";
+    qDebug() << " ";
 
     return true;
 }

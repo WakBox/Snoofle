@@ -9,9 +9,13 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
+win32:RC_ICONS += icon.ico
+ICON = icon.icns
+
 SOURCES += main.cpp \
     snoofle.cpp \
-    proxyserver.cpp
+    proxyserver.cpp \
+    packet.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -26,4 +30,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += \
     snoofle.h \
-    proxyserver.h
+    proxyserver.h \
+    packet.h \
+    worldpacket.h
