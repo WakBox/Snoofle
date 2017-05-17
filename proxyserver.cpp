@@ -5,7 +5,10 @@ ProxyServer::ProxyServer(uint localPort, QString remote, uint proxyPort, QObject
 {
     _proxy = new QTcpServer;
     _local = new QTcpSocket;
+    _localPacketSize = 0;
+
     _remote = new QTcpSocket;
+    _remotePacketSize = 0;
 
     _localPort = localPort;
     _remoteIp = QHostAddress(remote.split(":").first());
