@@ -18,10 +18,13 @@ public:
 signals:
 
 public slots:
+    void dumpPacket(Packet* packet);
 
 private:
     ProxyServer* _authServer;
     ProxyServer* _realmServer;
+
+    QFile* _dump;
 };
 
 #endif // SNOOFLE_H

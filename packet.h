@@ -1,6 +1,7 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+#include <QtCore>
 #include <QObject>
 #include <QDataStream>
 
@@ -22,6 +23,8 @@ public:
     qint8 readByte();
     qint16 readShort();
     qint32 readInt();
+
+    QString toHex();
 
 signals:
 

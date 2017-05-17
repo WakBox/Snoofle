@@ -47,3 +47,18 @@ QString Packet::readString(quint16 length)
 qint8 Packet::readByte() { return read<qint8>(); }
 qint16 Packet::readShort() { return read<qint16>(); }
 qint32 Packet::readInt() { return read<qint32>(); }
+
+QString Packet::toHex()
+{
+    QString format, hex;
+
+    int size = _data.size();
+
+    for (int i = 0; i < size; ++i)
+        format = format % hex.sprintf("%02X ", (quint8)_data.at(i));
+
+    if (_data.size() >= 1)
+        format.chop(1); //Remove last space
+
+    return format;
+}

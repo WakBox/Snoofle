@@ -42,6 +42,8 @@ void ProxyServer::onConnect()
         connect(_local, SIGNAL(readyRead()), this, SLOT(onLocalRecv()));
         _remote->connectToHost(_remoteIp, _remotePort);
 
+        qDebug() << ">> Connecting to remote: " << _remoteIp << ":" << _remotePort;
+
         if (_remote->waitForConnected(2000))
         {
             qDebug() << ">> Client successfully connected to Snoofle!";
@@ -79,10 +81,12 @@ void ProxyServer::onLocalRecv()
         Packet* packet = new Packet("CMSG", data);
         packet->readHeader();
 
-        //emit AddToPacketList(reader);
+        qDebug() << ">> localRecv " << packet->opcode();
 
         _remote->write(packet->data());
         _localPacketSize = 0;
+
+        emit packetReceived(packet);
     }
 }
 
@@ -112,14 +116,22 @@ void ProxyServer::onRemoteRecv()
         Packet* packet = new Packet("SMSG", data);
         packet->readHeader();
 
-        if (packet->opcode() == REALM_LIST_PACKET && _proxyPort)
+        qDebug() << ">> onRemoteRecv " << packet->opcode();
+
+        if (_proxyPort && packet->opcode() == REALM_LIST_PACKET)
             _local->write(updateRealms(packet));
         else
             _local->write(packet->data());
 
-        //emit AddToPacketList(reader);
-
         _remotePacketSize = 0;
+
+        if (_proxyPort && (
+                packet->opcode() == AUTH_ENCRYPTED_LOGIN || packet->opcode() == AUTH_ACCOUNT_DETAILS)
+                )
+            return;
+
+
+        emit packetReceived(packet);
     }
 }
 
@@ -185,6 +197,7 @@ QByteArray ProxyServer::updateRealms(Packet* packet)
         (*itr).ip = "127.0.0.1";
         (*itr).ports.clear();
         (*itr).ports.push_back(_proxyPort);
+        (*itr).ports.push_back(443);
     }
 
     WorldPacket data(REALM_LIST_PACKET);

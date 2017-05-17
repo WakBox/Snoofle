@@ -6,6 +6,8 @@
 
 #include "packet.h"
 
+#define AUTH_ENCRYPTED_LOGIN 1026
+#define AUTH_ACCOUNT_DETAILS 1027
 #define REALM_LIST_PACKET 1036
 
 struct Config
@@ -48,6 +50,7 @@ public:
     uint localPort() { return _localPort; }
 
 signals:
+    void packetReceived(Packet* packet);
 
 public slots:
     void onConnect();
