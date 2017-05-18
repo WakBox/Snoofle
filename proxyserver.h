@@ -45,6 +45,7 @@ public:
     ~ProxyServer();
 
     bool listen();
+    void abort(bool closeProxy = false);
     QByteArray updateRealms(Packet* packet);
 
     uint localPort() { return _localPort; }
@@ -56,6 +57,8 @@ public slots:
     void onConnect();
     void onLocalRecv();
     void onRemoteRecv();
+    void onDisconnect();
+    void onError(QAbstractSocket::SocketError);
 
 private:
     QTcpServer* _proxy;
@@ -65,6 +68,8 @@ private:
 
     QTcpSocket* _remote;
     quint16 _remotePacketSize;
+
+    bool _sniffing;
 
     uint _localPort;
     QHostAddress _remoteIp;

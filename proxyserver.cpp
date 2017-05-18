@@ -10,6 +10,8 @@ ProxyServer::ProxyServer(uint localPort, QString remote, uint proxyPort, QObject
     _remote = new QTcpSocket;
     _remotePacketSize = 0;
 
+    _sniffing = false;
+
     _localPort = localPort;
     _remoteIp = QHostAddress(remote.split(":").first());
     _remotePort = remote.split(":").last().toUInt();
@@ -18,8 +20,7 @@ ProxyServer::ProxyServer(uint localPort, QString remote, uint proxyPort, QObject
 
 ProxyServer::~ProxyServer()
 {
-    _local->deleteLater();
-    _remote->deleteLater();
+    abort(true);
 }
 
 bool ProxyServer::listen()
@@ -32,8 +33,33 @@ bool ProxyServer::listen()
 
     connect(_proxy, SIGNAL(newConnection()), this, SLOT(onConnect()));
     connect(_remote, SIGNAL(readyRead()), this, SLOT(onRemoteRecv()));
+    connect(_remote, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+    connect(_remote, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
 
     return true;
+}
+
+void ProxyServer::abort(bool closeProxy)
+{
+    if (_sniffing)
+    {
+        _sniffing = false;
+        qDebug() << ">> Client disconnected...";
+
+        _local->abort();
+        _local->deleteLater();
+
+        _remote->abort();
+    }
+
+    if (closeProxy && _proxy)
+    {
+        qDebug() << ">> Closing Snoofle proxy...";
+
+        _proxy->close();
+        _proxy->deleteLater();
+        _remote->deleteLater();
+    }
 }
 
 void ProxyServer::onConnect()
@@ -43,6 +69,9 @@ void ProxyServer::onConnect()
     if (_local)
     {
         connect(_local, SIGNAL(readyRead()), this, SLOT(onLocalRecv()));
+        connect(_local, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
+        connect(_local, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
+
         _remote->connectToHost(_remoteIp, _remotePort);
 
         qDebug() << ">> Connecting to remote: " << _remoteIp << ":" << _remotePort;
@@ -51,6 +80,8 @@ void ProxyServer::onConnect()
         {
             qDebug() << ">> Client successfully connected to Snoofle!";
             qDebug() << ">> Snoofle is sniffing now..";
+
+            _sniffing = true;
             return;
         }
     }
@@ -136,6 +167,17 @@ void ProxyServer::onRemoteRecv()
 
         emit packetReceived(packet);
     }
+}
+
+void ProxyServer::onDisconnect()
+{
+    abort();
+}
+
+void ProxyServer::onError(QAbstractSocket::SocketError)
+{
+    qDebug() << ">> Socket error: " << _local->errorString();
+    abort();
 }
 
 QByteArray ProxyServer::updateRealms(Packet* packet)
