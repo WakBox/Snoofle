@@ -6,7 +6,7 @@ Snoofle::Snoofle(QObject *parent) : QObject(parent)
     _realmServer = nullptr;
     _dump = nullptr;
 
-    qDebug() << "[ Snoofle ]";
+    qDebug() << "[ Snoofle V1.0 ]";
     qDebug() << "Wakfu sniffer by Sgt Fatality";
     qDebug() << " ";
 }
