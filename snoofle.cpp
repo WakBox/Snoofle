@@ -6,7 +6,7 @@ Snoofle::Snoofle(QObject *parent) : QObject(parent)
     _realmServer = nullptr;
     _dump = nullptr;
 
-    qDebug() << "[ Snoofle V1.0 ]";
+    qDebug() << "[ Snoofle V1.1 ]";
     qDebug() << "Wakfu sniffer by Sgt Fatality";
     qDebug() << " ";
 }
@@ -39,13 +39,13 @@ bool Snoofle::init()
     }
 
     QSettings settings(qApp->applicationDirPath() + "/settings.ini", QSettings::IniFormat);
+    QString realm = settings.value("RealmServer/connect-to").toString();
 
     _authServer = new ProxyServer(
                 settings.value("AuthServer/listen").toUInt(),
-                settings.value("AuthServer/remote").toString(),
+                settings.value("AuthServer/connect-to").toString(),
                 settings.value("RealmServer/listen").toUInt());
 
-    QString realm = settings.value("RealmServer/realm").toString();
     _realmServer = new ProxyServer(
                 settings.value("RealmServer/listen").toUInt(),
                 settings.value(realm + "/ip").toString());

@@ -72,7 +72,7 @@ private:
     bool _sniffing;
 
     uint _localPort;
-    QHostAddress _remoteIp;
+    QString _remoteIp;
     uint _remotePort;
     uint _proxyPort;
 };

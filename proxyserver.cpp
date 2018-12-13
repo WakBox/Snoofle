@@ -13,7 +13,7 @@ ProxyServer::ProxyServer(uint localPort, QString remote, uint proxyPort, QObject
     _sniffing = false;
 
     _localPort = localPort;
-    _remoteIp = QHostAddress(remote.split(":").first());
+    _remoteIp = remote.split(":").first();
     _remotePort = remote.split(":").last().toUInt();
     _proxyPort = proxyPort;
 }
@@ -25,7 +25,7 @@ ProxyServer::~ProxyServer()
 
 bool ProxyServer::listen()
 {
-    if (!_proxy->listen(QHostAddress::LocalHost, _localPort))
+    if (!_proxy->listen(QHostAddress::LocalHost, (quint16) _localPort))
     {
         qDebug() << _proxy->errorString();
         return false;
@@ -68,11 +68,27 @@ void ProxyServer::onConnect()
 
     if (_local)
     {
+        QHostAddress remoteIp;
+
+        if (_remoteIp.contains("wakfu.com"))
+        {
+            QHostInfo info = QHostInfo::fromName(_remoteIp);
+            if (info.addresses().isEmpty())
+            {
+                qDebug() << "Can't lookup hostname " << _remoteIp;
+                return;
+            }
+
+            remoteIp = info.addresses().first();
+        }
+        else
+            remoteIp = (QHostAddress) _remoteIp;
+
         connect(_local, SIGNAL(readyRead()), this, SLOT(onLocalRecv()));
         connect(_local, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
         connect(_local, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
 
-        _remote->connectToHost(_remoteIp, _remotePort);
+        _remote->connectToHost(_remoteIp, (quint16) _remotePort);
 
         qDebug() << ">> Connecting to remote: " << _remoteIp << ":" << _remotePort;
 
@@ -194,7 +210,7 @@ QByteArray ProxyServer::updateRealms(Packet* packet)
         realm.name = packet->readString((quint16)packet->readInt());
 
         realm.community = packet->readInt();
-        realm.ip = packet->readString((qint16)packet->readInt());
+        realm.ip = packet->readString((quint16)packet->readInt());
 
         int ports = packet->readInt();
         for (quint8 j = 0; j < ports; ++j)
@@ -216,7 +232,7 @@ QByteArray ProxyServer::updateRealms(Packet* packet)
             realm.versionP1 = packet->readByte();
             realm.versionP2 = packet->readShort();
             realm.versionP3 = packet->readByte();
-            realm.build = packet->readString((qint16)packet->readByte());
+            realm.build = packet->readString((quint16)packet->readByte());
         }
 
         realm.configSize = packet->readInt();
@@ -227,7 +243,7 @@ QByteArray ProxyServer::updateRealms(Packet* packet)
             {
                 Config c;
                 c.key = packet->readShort();
-                c.value = packet->readString(packet->readInt());
+                c.value = packet->readString((quint16)packet->readInt());
 
                 realm.configs.push_back(c);
             }
